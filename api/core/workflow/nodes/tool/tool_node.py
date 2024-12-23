@@ -1,6 +1,6 @@
 from collections.abc import Mapping, Sequence
-from os import path
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -57,6 +57,7 @@ class ToolNode(BaseNode[ToolNodeData]):
                     NodeRunMetadataKey.TOOL_INFO: tool_info,
                 },
                 error=f"Failed to get tool runtime: {str(e)}",
+                error_type=type(e).__name__,
             )
 
         # get parameters
@@ -90,6 +91,17 @@ class ToolNode(BaseNode[ToolNodeData]):
                     NodeRunMetadataKey.TOOL_INFO: tool_info,
                 },
                 error=f"Failed to invoke tool: {str(e)}",
+                error_type=type(e).__name__,
+            )
+        except Exception as e:
+            return NodeRunResult(
+                status=WorkflowNodeExecutionStatus.FAILED,
+                inputs=parameters_for_log,
+                metadata={
+                    NodeRunMetadataKey.TOOL_INFO: tool_info,
+                },
+                error=f"Failed to invoke tool: {str(e)}",
+                error_type="UnknownError",
             )
 
         # convert tool messages
@@ -180,7 +192,6 @@ class ToolNode(BaseNode[ToolNodeData]):
         for response in tool_response:
             if response.type in {ToolInvokeMessage.MessageType.IMAGE_LINK, ToolInvokeMessage.MessageType.IMAGE}:
                 url = str(response.message) if response.message else None
-                ext = path.splitext(url)[1] if url else ".bin"
                 tool_file_id = str(url).split("/")[-1].split(".")[0]
                 transfer_method = response.meta.get("transfer_method", FileTransferMethod.TOOL_FILE)
 
@@ -202,7 +213,6 @@ class ToolNode(BaseNode[ToolNodeData]):
                 )
                 result.append(file)
             elif response.type == ToolInvokeMessage.MessageType.BLOB:
-                # get tool file id
                 tool_file_id = str(response.message).split("/")[-1].split(".")[0]
                 with Session(db.engine) as session:
                     stmt = select(ToolFile).where(ToolFile.id == tool_file_id)
@@ -211,7 +221,6 @@ class ToolNode(BaseNode[ToolNodeData]):
                         raise ValueError(f"tool file {tool_file_id} not exists")
                 mapping = {
                     "tool_file_id": tool_file_id,
-                    "type": FileType.IMAGE,
                     "transfer_method": FileTransferMethod.TOOL_FILE,
                 }
                 file = file_factory.build_from_mapping(
@@ -223,18 +232,17 @@ class ToolNode(BaseNode[ToolNodeData]):
                 url = str(response.message)
                 transfer_method = FileTransferMethod.TOOL_FILE
                 tool_file_id = url.split("/")[-1].split(".")[0]
+                try:
+                    UUID(tool_file_id)
+                except ValueError:
+                    raise ToolFileError(f"cannot extract tool file id from url {url}")
                 with Session(db.engine) as session:
                     stmt = select(ToolFile).where(ToolFile.id == tool_file_id)
                     tool_file = session.scalar(stmt)
                     if tool_file is None:
                         raise ToolFileError(f"Tool file {tool_file_id} does not exist")
-                if "." in url:
-                    extension = "." + url.split("/")[-1].split(".")[1]
-                else:
-                    extension = ".bin"
                 mapping = {
                     "tool_file_id": tool_file_id,
-                    "type": FileType.IMAGE,
                     "transfer_method": transfer_method,
                     "url": url,
                 }
@@ -259,9 +267,8 @@ class ToolNode(BaseNode[ToolNodeData]):
                 f"{message.message}"
                 if message.type == ToolInvokeMessage.MessageType.TEXT
                 else f"Link: {message.message}"
-                if message.type == ToolInvokeMessage.MessageType.LINK
-                else ""
                 for message in tool_response
+                if message.type in {ToolInvokeMessage.MessageType.TEXT, ToolInvokeMessage.MessageType.LINK}
             ]
         )
 

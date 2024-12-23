@@ -109,14 +109,13 @@ const Answer: FC<AnswerProps> = ({
             <div className='flex items-center justify-center w-full h-full rounded-full bg-white border-[0.5px] border-black/5 text-xl'>
               <LogoAvatar />
             </div>
-          )
-        }
+        )}
       </div>
       <div className='chat-answer-container group grow w-0 ml-4' ref={containerRef}>
         <div className={cn('group relative pr-10', chatAnswerContainerInner)}>
           <div
             ref={contentRef}
-            className={cn('relative inline-block px-4 py-3 max-w-full bg-gray-100 rounded-2xl text-sm text-gray-900', workflowProcess && 'w-full')}
+            className={cn('relative inline-block px-4 py-3 max-w-full bg-chat-bubble-bg rounded-2xl body-lg-regular text-text-primary', workflowProcess && 'w-full')}
           >
             {
               !responding && (
@@ -214,15 +213,15 @@ const Answer: FC<AnswerProps> = ({
                 disabled={!item.prevSibling}
                 onClick={() => item.prevSibling && switchSibling?.(item.prevSibling)}
               >
-                <ChevronRight className="w-[14px] h-[14px] rotate-180 text-gray-500" />
+                <ChevronRight className="w-[14px] h-[14px] rotate-180 text-text-tertiary" />
               </button>
-              <span className="px-2 text-xs text-gray-700">{item.siblingIndex + 1} / {item.siblingCount}</span>
+              <span className="px-2 text-xs text-text-quaternary">{item.siblingIndex + 1} / {item.siblingCount}</span>
               <button
                 className={`${item.nextSibling ? 'opacity-100' : 'opacity-65'}`}
                 disabled={!item.nextSibling}
                 onClick={() => item.nextSibling && switchSibling?.(item.nextSibling)}
               >
-                <ChevronRight className="w-[14px] h-[14px] text-gray-500" />
+                <ChevronRight className="w-[14px] h-[14px] text-text-tertiary" />
               </button>
             </div>}
           </div>
