@@ -22,7 +22,7 @@ import AnswerIcon from '@/app/components/base/answer-icon'
 import { ChevronRight } from '@/app/components/base/icons/src/vender/line/arrows'
 import cn from '@/utils/classnames'
 import { FileList } from '@/app/components/base/file-uploader'
-import LogoAvatar from '@/app/components/base/logo/logo-embeded-chat-avatar'
+import LogoAvatar from '@/app/components/base/logo/logo-embedded-chat-avatar'
 
 type AnswerProps = {
   item: ChatItem
