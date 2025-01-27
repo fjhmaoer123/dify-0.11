@@ -13,7 +13,7 @@ import AgentContent from './agent-content'
 import BasicContent from './basic-content'
 import SuggestedQuestions from './suggested-questions'
 import More from './more'
-import WorkflowProcess from './workflow-process'
+import WorkflowProcessItem from './workflow-process'
 import LoadingAnim from '@/app/components/base/chat/chat/loading-anim'
 import Citation from '@/app/components/base/chat/chat/citation'
 import { EditTitle } from '@/app/components/app/annotation/edit-annotation-modal/edit-item'
@@ -22,7 +22,7 @@ import AnswerIcon from '@/app/components/base/answer-icon'
 import { ChevronRight } from '@/app/components/base/icons/src/vender/line/arrows'
 import cn from '@/utils/classnames'
 import { FileList } from '@/app/components/base/file-uploader'
-import LogoAvatar from '@/app/components/base/logo/logo-embedded-chat-avatar'
+import LogoAvatar from '@/app/components/base/logo/logo-embeded-chat-avatar'
 
 type AnswerProps = {
   item: ChatItem
@@ -134,7 +134,7 @@ const Answer: FC<AnswerProps> = ({
             {/** Render the normal steps */}
             {
               workflowProcess && !hideProcessDetail && (
-                <WorkflowProcess
+                <WorkflowProcessItem
                   data={workflowProcess}
                   item={item}
                   hideProcessDetail={hideProcessDetail}
@@ -143,11 +143,12 @@ const Answer: FC<AnswerProps> = ({
             }
             {/** Hide workflow steps by it's settings in siteInfo */}
             {
-              workflowProcess && hideProcessDetail && appData && appData.site.show_workflow_steps && (
-                <WorkflowProcess
+              workflowProcess && hideProcessDetail && appData && (
+                <WorkflowProcessItem
                   data={workflowProcess}
                   item={item}
                   hideProcessDetail={hideProcessDetail}
+                  readonly={!appData.site.show_workflow_steps}
                 />
               )
             }
